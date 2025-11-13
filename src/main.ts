@@ -1,16 +1,9 @@
 const ws = new WebSocket('wss://localhost:8080');
 const windows: Window[] = [];
 let windowCount = 0;
-let isReversed = false; // ADDED: State to track the current order
-// const windowOrder: number[] = []; // REMOVED
 
-// const dialog = document.getElementById('myDialog') as HTMLDialogElement; // REMOVED
-// const openBtn = document.getElementById('openDialogBtn'); // REMOVED
-// const closeBtn = document.getElementById('closeDialogBtn'); // REMOVED
 const permissionBtn = document.getElementById('permissionBtn') as HTMLButtonElement;
 const statusEl = document.getElementById('status') as HTMLParagraphElement;
-
-// if (dialog && openBtn && closeBtn) { ... } // REMOVED
 
 /**
  * Queries the current permission status and updates the button text.
@@ -81,60 +74,6 @@ async function requestPermission() {
     updatePermissionStatus();
 }
 
-/**
- * MODIFIED: Reverses the current Z-order of all open windows.
- * This now toggles between Window 1 on top and Window 5 on top.
- */
-function reverseWindowOrder(): void {
-    console.log(`Reversing Z-order for ${windows.length} windows...`);
-
-    // Check if windows are still open
-    const openWindows = windows.filter(w => w && !w.closed);
-    if (openWindows.length === 0) {
-        console.warn("Reversing skipped: No windows are open.");
-        if (statusEl) {
-            statusEl.textContent = "Reversing failed: No windows are open.";
-        }
-        return;
-    }
-
-    try {
-        let statusMessage = "";
-        if (isReversed) {
-            // CURRENT STACK: 1 is on top.
-            // ACTION: Focus from 0 up to 49.
-            // RESULT: Window 5 (index 49) will be on top.
-            console.log("Setting stack: 5 on top.");
-            for (let i = 0; i < windows.length; i++) {
-                focusWindowByIndex(i);
-            }
-            statusMessage = "Stack set (5 on top)! Reversing again in 4s...";
-        } else {
-            // CURRENT STACK: 5 is on top.
-            // ACTION: Focus from 49 down to 0.
-            // RESULT: Window 1 (index 0) will be on top.
-            console.log("Setting stack: 1 on top.");
-            for (let i = windows.length - 1; i >= 0; i--) {
-                focusWindowByIndex(i);
-            }
-            statusMessage = "Stack set (1 on top)! Reversing again in 4s...";
-        }
-
-        // Toggle the state for the next run
-        isReversed = !isReversed;
-        
-        if (statusEl) {
-            // Update text to show it's an ongoing process
-            statusEl.textContent = statusMessage;
-        }
-    } catch (e) {
-        console.error("Error during window reversing:", e);
-        if (statusEl) {
-            statusEl.textContent = "Error reversing stack.";
-        }
-    }
-}
-
 
 /**
  * Opens a new child window with a given ID, loading content from 'child.html'.
@@ -145,8 +84,8 @@ function openNewWindow(id: number): Window | null {
     const url = `/src/child.html?id=${id}`;
     // Stagger windows for visibility
     const offset = 5; // Make offset smaller for 5 windows
-    const leftPosition = 50 + (offset * id); // Cascade left
-    const topPosition = 5 + (offset * id); // Cascade top
+    const leftPosition = 100 + (offset * id); // Cascade left
+    const topPosition = 100 + (offset * id); // Cascade top
 
     const windowFeatures = `width=300,height=300,left=${leftPosition},top=${topPosition}`;
     const newWindow = window.open(url, windowName, windowFeatures);
@@ -185,29 +124,20 @@ function focusWindowByIndex(index: number): void {
     }
 }
 
-// function enforceZOrder(): void { ... } // REMOVED
-
 /**
- * MODIFIED: Starts a repeating timer to reverse the window stack every 3 seconds.
+ * Sets up a message listener to receive messages from child windows.
  */
-function startReversingTimer() {
-    if (!statusEl) {
-        console.error("Cannot start timer: 'status' element not found.");
-        // Fallback to just running the function
-        setInterval(reverseWindowOrder, 4000);
-        return;
-    }
-
-    // New logic: start a repeating timer
-    statusEl.textContent = "Starting 4-second reverse timer...";
-    
-    // Set an interval to call reverseWindowOrder every 3 seconds
-    setInterval(reverseWindowOrder, 4000);
+function setupChildMessageListener(): void {
+    window.addEventListener('message', (event) => {
+        // Check for the specific message from the first child window
+        if (event.data === 'FOCUS_CHILD_WINDOW_2') {
+            console.log('Message received from Child 1: "Focus Child Window 2"');
+            // The second child window is at index 1 (since the first is at index 0)
+            focusWindowByIndex(1);
+        }
+    });
+    console.log('Parent window message listener initialized.');
 }
-
-
-// function openModalWindow(title: string, contentHTML: string): void { ... } // REMOVED
-
 
 /**
  * Sets up a Secure WebSocket connection to listen for remote commands.
@@ -222,11 +152,9 @@ function setupRemoteControlListener(): void {
 
         try {
             const { command, windowIndex } = JSON.parse(event.data);
-
             if (command === 'focus' && typeof windowIndex === 'number') {
                 focusWindowByIndex(windowIndex);
             }
-            // else if (command === 'reverse') { ... } // REMOVED
         } catch (error) {
             console.error('Failed to parse incoming message:', error);
         }
@@ -297,10 +225,6 @@ function initializeApp(): void {
             const loadedCount = results.filter(r => r.status === 'fulfilled').length;
             const failedCount = results.filter(r => r.status === 'rejected').length;
             console.log(`All windows finished: ${loadedCount} loaded, ${failedCount} timed out/failed.`);
-            
-            // MODIFIED: Start the repeating 3-second timer
-            // This is now inside the .then() block
-            startReversingTimer();
         });
     
     // This will run *before* windows are loaded, which is fine.
