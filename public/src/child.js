@@ -5,7 +5,7 @@ const id = urlParams.get('id');
 
 const h1 = document.getElementById('windowTitle');
 const p = document.getElementById('windowText');
-const btn_focus = document.getElementById('windowText');
+const btn_focus = document.getElementById('focus-c-btn');
 
 if (id) {
     h1.textContent = `Window ${id}`;
