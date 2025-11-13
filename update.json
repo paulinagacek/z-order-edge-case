@@ -2,7 +2,7 @@
   "versions": [
     {
       "version": "0.1.0",
-      "src": "https://raw.githubusercontent.com/paulinagacek/z-order-edge-case/main/dist/z-order.swbn"
+      "src": "https://raw.githubusercontent.com/paulinagacek/z-order-edge-case/main/z-order.swbn"
     }
   ]
 }
