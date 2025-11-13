@@ -1,24 +1,22 @@
 {
-  "name": "z-order-edge-case",
-  "short_name": "z-order-edge-case",
+  "name": "iwa-zorder-edge-case",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "bump": "node ./bump.js",
+    "build": "vite build",
     "preview": "vite preview",
-    "prettier": "prettier -w ."
+    "format": "prettier -w ."
   },
   "devDependencies": {
-    "@types/trusted-types": "^2.0.7",
-    "dompurify": "^3.2.6",
-    "dotenv": "^17.2.0",
-    "prettier": "^3.6.2",
+    "dotenv": "^16.4.2",
+    "prettier": "^3.2.5",
     "rollup-plugin-webbundle": "^0.2.0",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.13",
     "vite-plugin-html-inject": "^1.1.2",
-    "wbn-sign": "^0.2.1"
+    "wbn-sign": "^0.2.0"
   }
 }
