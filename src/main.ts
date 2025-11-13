@@ -83,7 +83,7 @@ function openNewWindow(id: number): Window | null {
     const windowName = `childWindow${id}`;
     const url = `/src/child.html?id=${id}`;
     // Stagger windows for visibility
-    const offset = 5; // Make offset smaller for 5 windows
+    const offset = 100; // Make offset smaller for 5 windows
     const leftPosition = 100 + (offset * id); // Cascade left
     const topPosition = 100 + (offset * id); // Cascade top
 
@@ -129,10 +129,15 @@ function focusWindowByIndex(index: number): void {
  */
 function setupChildMessageListener(): void {
     window.addEventListener('message', (event) => {
+        // IMPORTANT: In production, verify event.origin for security!
+
+        console.log('📬 Parent received message from origin:', event.origin); // Added console log for all messages
+        console.log('📬 Parent received message data:', event.data);
+
         // Check for the specific message from the first child window
         if (event.data === 'FOCUS_CHILD_WINDOW_2') {
             console.log('Message received from Child 1: "Focus Child Window 2"');
-            // The second child window is at index 1 (since the first is at index 0)
+            // The second child window is at index 1
             focusWindowByIndex(1);
         }
     });
@@ -187,30 +192,32 @@ function initializeApp(): void {
         updatePermissionStatus();
     }
 
+    setupChildMessageListener()
+
     // MODIFIED: Open 5 windows and wait for them to load
     console.log("Opening 5 windows...");
     const windowLoadPromises: Promise<void>[] = [];
 
     for (let i = 0; i < 5; i++) {
         const newWindow = openNewWindow(i + 1); // Get the returned window object
-        
+
         if (newWindow) {
             // Create a promise that resolves on 'load' or rejects on timeout
             const loadPromise = new Promise<void>((resolve, reject) => {
                 try {
                     // Add the load listener
                     newWindow.addEventListener('load', () => {
-                        console.log(`Window ${i+1} loaded.`);
+                        console.log(`Window ${i + 1} loaded.`);
                         resolve();
                     }, { once: true }); // Use 'once' to auto-remove listener
 
                     // Add a timeout in case a window fails to load
                     setTimeout(() => {
-                        reject(new Error(`Window ${i+1} timed out`));
+                        reject(new Error(`Window ${i + 1} timed out`));
                     }, 500); // 5 second timeout per window
                 } catch (e) {
                     // Catch potential cross-origin errors
-                    console.error(`Error adding listener to window ${i+1}. Assuming loaded.`, e);
+                    console.error(`Error adding listener to window ${i + 1}. Assuming loaded.`, e);
                     resolve(); // Resolve immediately if listener fails
                 }
             });
@@ -226,7 +233,7 @@ function initializeApp(): void {
             const failedCount = results.filter(r => r.status === 'rejected').length;
             console.log(`All windows finished: ${loadedCount} loaded, ${failedCount} timed out/failed.`);
         });
-    
+
     // This will run *before* windows are loaded, which is fine.
     setupRemoteControlListener();
 }
