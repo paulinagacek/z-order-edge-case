@@ -1,0 +1,38 @@
+{
+  "id": "/",
+  "short_name": "IWA zorder (edge case)",
+  "name": "Z-order IWA (edge case)",
+  "version": "0.1.0",
+  "update_manifest_url": "https://raw.githubusercontent.com/paulinagacek/z-order-edge-case/refs/heads/main/update.json",
+  "icons": [
+    {
+      "src": "/images/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["borderless"],
+  "scope": "/",
+  "isolated_storage": true,
+  "permissions_policy": {
+    "cross-origin-isolated": ["self"],
+    "direct-sockets": ["self"],
+    "controlled-frame": ["self"],
+    "window-management": ["self"],
+    "all-screens-capture": ["self"]
+  },
+  "host_permissions": [
+    "wss://localhost:*/"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "<all_urls>"
+    ]
+  },
+  "permissions": [
+    "window-management"
+  ]
+}
