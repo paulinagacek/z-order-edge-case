@@ -3,6 +3,10 @@
     {
       "version": "0.1.0",
       "src": "https://raw.githubusercontent.com/paulinagacek/z-order-edge-case/main/z-order.swbn"
+    },
+    {
+      "version": "0.2.0",
+      "src": "https://raw.githubusercontent.com/paulinagacek/z-order-edge-case/main/z-order-v2.swbn"
     }
   ]
 }

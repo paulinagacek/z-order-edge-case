@@ -1,4 +1,3 @@
-const ws = new WebSocket('wss://localhost:8080');
 const windows: Window[] = [];
 let windowCount = 0;
 
@@ -77,7 +76,6 @@ async function requestPermission() {
 
 /**
  * Opens a new child window with a given ID, loading content from 'child.html'.
- * MODIFIED: Now returns the new window object or null.
  */
 function openNewWindow(id: number): Window | null {
     const windowName = `childWindow${id}`;
@@ -92,12 +90,11 @@ function openNewWindow(id: number): Window | null {
 
     if (newWindow) {
         windows.push(newWindow);
-        // windowOrder.push(id); // REMOVED
         windowCount = windows.filter(w => !w.closed).length;
-        return newWindow; // ADDED
+        return newWindow;
     } else {
         console.log('Failed to open a new window. Check your pop-up blocker.');
-        return null; // ADDED
+        return null;
     }
 }
 
@@ -129,15 +126,12 @@ function focusWindowByIndex(index: number): void {
  */
 function setupChildMessageListener(): void {
     window.addEventListener('message', (event) => {
-        // IMPORTANT: In production, verify event.origin for security!
-
-        console.log('📬 Parent received message from origin:', event.origin); // Added console log for all messages
+        console.log('📬 Parent received message from origin:', event.origin);
         console.log('📬 Parent received message data:', event.data);
 
         // Check for the specific message from the first child window
         if (event.data === 'FOCUS_CHILD_WINDOW_2') {
             console.log('Message received from Child 1: "Focus Child Window 2"');
-            // The second child window is at index 1
             focusWindowByIndex(1);
         }
     });
@@ -145,38 +139,7 @@ function setupChildMessageListener(): void {
 }
 
 /**
- * Sets up a Secure WebSocket connection to listen for remote commands.
- */
-function setupRemoteControlListener(): void {
-    ws.onopen = () => {
-        console.log('Connected to WebSocket server. Waiting for commands...');
-    };
-
-    ws.onmessage = (event) => {
-        console.log('Message received from server:', event.data);
-
-        try {
-            const { command, windowIndex } = JSON.parse(event.data);
-            if (command === 'focus' && typeof windowIndex === 'number') {
-                focusWindowByIndex(windowIndex);
-            }
-        } catch (error) {
-            console.error('Failed to parse incoming message:', error);
-        }
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error. Is the server running?', error);
-    };
-
-    ws.onclose = () => {
-        console.warn('Disconnected from WebSocket server.');
-    };
-}
-
-/**
  * Initializes the application.
- * MODIFIED: Now waits for all windows to load before starting the timer.
  */
 function initializeApp(): void {
     // Check if the API is even available in this browser
@@ -184,7 +147,6 @@ function initializeApp(): void {
         statusEl.textContent = 'Window Management API is not supported by this browser.';
         if (permissionBtn) permissionBtn.disabled = true;
     } else {
-        // Set up the permission button
         if (permissionBtn) {
             permissionBtn.addEventListener('click', requestPermission);
         }
@@ -194,7 +156,6 @@ function initializeApp(): void {
 
     setupChildMessageListener()
 
-    // MODIFIED: Open 5 windows and wait for them to load
     console.log("Opening 5 windows...");
     const windowLoadPromises: Promise<void>[] = [];
 
@@ -214,7 +175,7 @@ function initializeApp(): void {
                     // Add a timeout in case a window fails to load
                     setTimeout(() => {
                         reject(new Error(`Window ${i + 1} timed out`));
-                    }, 500); // 5 second timeout per window
+                    }, 5000); // 5 second timeout per window
                 } catch (e) {
                     // Catch potential cross-origin errors
                     console.error(`Error adding listener to window ${i + 1}. Assuming loaded.`, e);
@@ -225,17 +186,12 @@ function initializeApp(): void {
         }
     }
 
-    // MODIFIED: Wait for all promises to settle (either resolve or reject)
-    // We use allSettled so that even if some windows time out, we still proceed.
     Promise.allSettled(windowLoadPromises)
         .then((results) => {
             const loadedCount = results.filter(r => r.status === 'fulfilled').length;
             const failedCount = results.filter(r => r.status === 'rejected').length;
             console.log(`All windows finished: ${loadedCount} loaded, ${failedCount} timed out/failed.`);
         });
-
-    // This will run *before* windows are loaded, which is fine.
-    setupRemoteControlListener();
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
